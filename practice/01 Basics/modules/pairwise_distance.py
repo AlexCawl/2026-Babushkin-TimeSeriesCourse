@@ -49,7 +49,10 @@ class PairwiseDistance:
 
         dist_func = None
 
-        # INSERT YOUR CODE
+        if self.metric == 'euclidean':
+            dist_func = norm_ED_distance if self.is_normalize else ED_distance
+        elif self.metric == 'dtw':
+            dist_func = DTW_distance
 
         return dist_func
 
@@ -66,9 +69,16 @@ class PairwiseDistance:
         matrix_values: distance matrix
         """
         
+        if self.is_normalize and self.metric == 'dtw':
+            input_data = z_normalize(input_data)
+
         matrix_shape = (input_data.shape[0], input_data.shape[0])
         matrix_values = np.zeros(shape=matrix_shape)
         
-        # INSERT YOUR CODE
+        dist_func = self._choose_distance()
+        for i in range(input_data.shape[0]):
+            for j in range(i + 1, input_data.shape[0]):
+                matrix_values[i, j] = dist_func(input_data[i], input_data[j])
+                matrix_values[j, i] = matrix_values[i, j]
 
         return matrix_values

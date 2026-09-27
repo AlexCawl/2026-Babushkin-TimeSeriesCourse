@@ -1,8 +1,7 @@
-import numpy as np
+from typing import Self
 
 from modules.metrics import *
 from modules.utils import z_normalize
-
 
 default_metrics_params = {'euclidean': {'normalize': True},
                          'dtw': {'normalize': True, 'r': 0.05}
@@ -19,7 +18,7 @@ class TimeSeriesKNN:
              Options: {euclidean, dtw}
     metric_params: dictionary containing parameters for the distance metric being used
     """
-    
+
     def __init__(self, n_neighbors: int = 3, metric: str = 'euclidean', metric_params: dict | None = None) -> None:
 
         self.n_neighbors: int = n_neighbors
@@ -42,7 +41,7 @@ class TimeSeriesKNN:
         -------
         self: the fitted model
         """
-       
+
         self.X_train = X_train
         self.Y_train = Y_train
 
@@ -63,9 +62,13 @@ class TimeSeriesKNN:
         dist: distance between the train and test samples
         """
 
-        dist = 0
-
-        # INSERT YOUR CODE
+        if self.metric == 'euclidean':
+            distance = norm_ED_distance if self.metric_params['normalize'] else ED_distance
+            dist = distance(x_train, x_test)
+        elif self.metric == 'dtw':
+            if self.metric_params['normalize']:
+                x_train, x_test = z_normalize(x_train), z_normalize(x_test)
+            dist = DTW_distance(x_train, x_test, r=self.metric_params['r'])
 
         return dist
 
@@ -85,7 +88,10 @@ class TimeSeriesKNN:
 
         neighbors = []
 
-        # INSERT YOUR CODE
+        for x_train, label in zip(self.X_train, self.Y_train):
+            neighbors.append((self._distance(x_train, x_test), int(label)))
+        neighbors.sort(key=lambda neighbor: neighbor[0])
+        neighbors = neighbors[:self.n_neighbors]
 
         return neighbors
 
@@ -104,8 +110,10 @@ class TimeSeriesKNN:
         """
 
         y_pred = []
-
-        # INSERT YOUR CODE
+        for x_test in X_test:
+            neighbors = self._find_neighbors(x_test)
+            labels, counts = np.unique([label for _, label in neighbors], return_counts=True)
+            y_pred.append(labels[np.argmax(counts)])
 
         return np.array(y_pred)
 

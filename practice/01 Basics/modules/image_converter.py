@@ -1,9 +1,8 @@
-import numpy as np
-import pandas as pd
 import math
+
 import cv2
-import imutils
-from google.colab.patches import cv2_imshow
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Image2TimeSeries:
@@ -32,7 +31,10 @@ class Image2TimeSeries:
         prep_img: image after preprocessing
         """
 
-        # INSERT YOUR CODE
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        inverse = cv2.bitwise_not(gray)
+        blur = cv2.GaussianBlur(inverse, (5, 5), 0)
+        _, prep_img = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
         return prep_img
 
@@ -51,7 +53,7 @@ class Image2TimeSeries:
         """
 
         contours, hierarchy = cv2.findContours(img.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contour = [cnt for cnt in contours if cv2.contourArea(cnt) > 500][0]
+        contour = max(contours, key=cv2.contourArea)
 
         return contour
 
@@ -139,8 +141,7 @@ class Image2TimeSeries:
         edge_coordinates = []
         for angle in range(0, 360, self.angle_step):
             pt = self._get_coordinates_at_angle(contour, center, angle)
-            if np.any(pt):
-                edge_coordinates.append(pt)
+            edge_coordinates.append(pt)
 
         return edge_coordinates
 
@@ -164,7 +165,10 @@ class Image2TimeSeries:
         for i in range(len(edge_coordinates)):
             cv2.drawContours(img, np.array([[center, edge_coordinates[i]]]), -1, (255, 0, 255), 4)
 
-        cv2_imshow(imutils.resize(img, width=200))
+        plt.figure(figsize=(8, 6))
+        plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        plt.axis('off')
+        plt.show()
 
 
     def convert(self, img: np.ndarray, is_visualize: bool = False) -> np.ndarray:
@@ -197,3 +201,8 @@ class Image2TimeSeries:
             ts.append(dist)
 
         return np.array(ts)
+
+
+def image2ts(img: np.ndarray, angle_step: int = 10, is_visualize: bool = False) -> np.ndarray:
+    """Преобразует изображение во временной ряд через Image2TimeSeries.convert()."""
+    return Image2TimeSeries(angle_step).convert(img, is_visualize)
