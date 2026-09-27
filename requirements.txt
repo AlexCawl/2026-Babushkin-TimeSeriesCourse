@@ -1,0 +1,13 @@
+opencv-python
+# Практика 1; проверено на Python 3.12.10
+numpy==2.3.5
+pandas==2.3.3
+scipy==1.18.1
+scikit-learn==1.7.2
+matplotlib==3.11.2
+plotly==7.1.0
+opencv-python-headless==5.0.0.93
+sktime==0.40.1
+numba==0.67.0
+nbformat==5.11.1
+ipykernel==7.3.0
