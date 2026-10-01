@@ -14,3 +14,7 @@ ipykernel==7.3.0
 
 # Практика 2
 mass-ts==0.1.4
+
+# Практика 3
+stumpy==1.11.1
+setuptools==80.9.0
