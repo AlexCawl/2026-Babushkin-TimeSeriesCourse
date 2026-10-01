@@ -84,6 +84,18 @@ class BestMatchPredictor:
 
         predict_values = np.zeros((self.h,))
 
-        # INSERT YOUR CODE
+        m = len(query)
+        search_ts = ts[:-self.h]
+        if self.match_alg == 'UCR-DTW':
+            model = UCR_DTW(**self.match_alg_params)
+            bestmatch = model.perform(search_ts, query)
+        else:
+            dist_profile = mts.mass2(search_ts, query).real
+            excl_zone = math.ceil(m * self.match_alg_params['excl_zone_frac'])
+            bestmatch = topK_match(dist_profile, excl_zone, self.match_alg_params['topK'])
+        topK_subs_predict_values = np.array([
+            ts[i + m:i + m + self.h] for i in bestmatch['indices']
+        ])
+        predict_values = self._calculate_predict_values(topK_subs_predict_values)
         
         return predict_values

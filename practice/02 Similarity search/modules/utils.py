@@ -17,7 +17,7 @@ def read_ts(file_path: str) -> np.ndarray:
     ts: time series data
     """
 
-    ts = pd.read_csv(file_path, header=None, delim_whitespace=True)
+    ts = pd.read_csv(file_path, header=None, sep=r'\s+')
     
     return ts.to_numpy()
 
@@ -36,7 +36,8 @@ def z_normalize(ts: np.ndarray) -> np.ndarray:
     norm_ts: z-normalized time series
     """
 
-    norm_ts = (ts - np.mean(ts, axis=0)) / np.std(ts, axis=0)
+    std = np.std(ts, axis=-1, keepdims=True)
+    norm_ts = (ts - np.mean(ts, axis=-1, keepdims=True)) / np.where(std == 0, 1, std)
 
     return norm_ts
 

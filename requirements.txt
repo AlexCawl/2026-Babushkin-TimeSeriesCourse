@@ -11,3 +11,6 @@ sktime==0.40.1
 numba==0.67.0
 nbformat==5.11.1
 ipykernel==7.3.0
+
+# Практика 2
+mass-ts==0.1.4

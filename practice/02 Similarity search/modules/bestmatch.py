@@ -150,11 +150,23 @@ class NaiveBestMatchFinder(BestMatchFinder):
         bsf = np.inf
 
         bestmatch = {
-            'index' : [],
-            'distance' : []
+            'indices' : [],
+            'distances' : []
         }
         
-        # INSERT YOUR CODE
+        if self.is_normalize:
+            query = z_normalize(query)
+
+        for i in range(N):
+            candidate = ts_data[i]
+            if self.is_normalize:
+                candidate = z_normalize(candidate)
+            distance = DTW_distance(query, candidate, self.r)
+            if distance < bsf:
+                dist_profile[i] = distance
+                bestmatch = topK_match(dist_profile, excl_zone, self.topK, bsf)
+                if len(bestmatch['indices']) == self.topK:
+                    bsf = max(bestmatch['distances'])
 
         return bestmatch
 
@@ -199,7 +211,7 @@ class UCR_DTW(BestMatchFinder):
 
         lb_Kim = 0
         
-        # INSERT YOUR CODE
+        lb_Kim = (subs1[0] - subs2[0]) ** 2 + (subs1[-1] - subs2[-1]) ** 2
 
         return lb_Kim
 
@@ -221,7 +233,16 @@ class UCR_DTW(BestMatchFinder):
 
         lb_Keogh = 0
 
-        # INSERT YOUR CODE
+        m = len(subs1)
+        radius = math.ceil(m * r)
+        for i in range(m):
+            window = subs1[max(0, i - radius):min(m, i + radius + 1)]
+            lower = np.min(window)
+            upper = np.max(window)
+            if subs2[i] > upper:
+                lb_Keogh += (subs2[i] - upper) ** 2
+            elif subs2[i] < lower:
+                lb_Keogh += (subs2[i] - lower) ** 2
 
         return lb_Keogh
 
@@ -271,10 +292,36 @@ class UCR_DTW(BestMatchFinder):
         bsf = np.inf
         
         bestmatch = {
-            'index' : [],
-            'distance' : []
+            'indices' : [],
+            'distances' : []
         }
 
-        # INSERT YOUR CODE
+        self.not_pruned_num = 0
+        self.lb_Kim_num = 0
+        self.lb_KeoghQC_num = 0
+        self.lb_KeoghCQ_num = 0
+        if self.is_normalize:
+            query = z_normalize(query)
+
+        for i in range(N):
+            candidate = ts_data[i]
+            if self.is_normalize:
+                candidate = z_normalize(candidate)
+            if self._LB_Kim(query, candidate) >= bsf:
+                self.lb_Kim_num += 1
+                continue
+            if self._LB_Keogh(query, candidate, self.r) >= bsf:
+                self.lb_KeoghQC_num += 1
+                continue
+            if self._LB_Keogh(candidate, query, self.r) >= bsf:
+                self.lb_KeoghCQ_num += 1
+                continue
+            self.not_pruned_num += 1
+            distance = DTW_distance(query, candidate, self.r)
+            if distance < bsf:
+                dist_profile[i] = distance
+                bestmatch = topK_match(dist_profile, excl_zone, self.topK, bsf)
+                if len(bestmatch['indices']) == self.topK:
+                    bsf = max(bestmatch['distances'])
 
         return bestmatch
